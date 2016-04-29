@@ -10,14 +10,15 @@ class HilbertSpace:
     def buildspace(self,vec_list,vec,S,N,start):
         if (N==1):
             for i in range(start,S+1):
-                vec_list.append(vec+(i,))
+                vec_list[sum(vec+(i,))-self.lmin].append(vec+(i,))
         else:
             for i in range(start,S+1):
                 self.buildspace(vec_list,vec+(i,),S,N-1,i+1)
                 
     def __init__(self,S,N):
-        self.dim = int(comb(2*S+1,N))
-        self.vec_list = []
+        self.lmin = sum(range(-S,-S+N))
+        self.lmax = -self.lmin
+        self.vec_list = [[] for _ in range((self.lmax-self.lmin+1))]
         self.buildspace(self.vec_list,(),S,N,-S)
         
 class TwoBodyInteraction:
@@ -65,23 +66,14 @@ def search(vec,vec_list):
 class Hamiltonian:
         
     def __init__(self,twobody,hilbert,S,N):
-        self.dim = hilbert.dim
-        self.hamiltonian = numpy.zeros((self.dim,self.dim))
-        for index1 in range(self.dim):
-            vec = hilbert.vec_list[index1]
-            for i in range(N):
-                for j in range(i+1,N):
-                    m4,m3 = vec[i],vec[j] # m3>m4
-                    self.hamiltonian[index1,index1]+=twobody.twobody[m4,m3,m3,m4]
-                    vec_proxy=list(vec)
-                    sign = 1                    
-                    m1,m2=m4,m3
-                    while(m2>m1+2):
-                        m2-=1
-                        m1+=1
-                        if (m1 in vec or m2 in vec):
-                            if (m1 in vec and m2 in vec):
-                                pass
+        self.hamil_list = []
+        for block in hilbert.vec_list:
+            dim = len(block)
+            hamiltonian = numpy.zeros((dim,dim))
+            for index1 in range(dim):
+                vec = block[index1]
+                for i in range(N):
+                    for j in range(i+1,N):
                             else:
                                 sign*=-1
                         
@@ -112,8 +104,6 @@ class Hamiltonian:
             print '\n'
                         
     def diagonalize(self):
-        self.eigenvalues, self.eigenvectors = numpy.linalg.eigh(self.hamiltonian)
-        self.groundstate = self.eigenvectors[:,0]
         
     def print_groundstate(self,hilbert):
         for index in range(self.dim):
@@ -186,9 +176,7 @@ class ReducedDensity:
             
 if __name__=='__main__':
     
-    S, N = 6,5
     hilbertspace = HilbertSpace(S,N)
-    #print len(hilbertspace.vec_list),hilbertspace.dim
     
     twobody = TwoBodyInteraction([1,0.1,0.01],S)
     #print twobody
@@ -197,8 +185,5 @@ if __name__=='__main__':
     hamiltonian.diagonalize()
     #print hamiltonian.eigenvalues
     #print hamiltonian.eigenvectors
-    #hamiltonian.plot_spectrum()
     #hamiltonian.print_groundstate(hilbertspace)
-    reduced_density = ReducedDensity(hamiltonian.groundstate,hilbertspace,S)
-    reduced_density.diagonalize()
     plt.show()
