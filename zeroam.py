@@ -39,10 +39,10 @@ class ZeroAngularMomentum:
                 
                         
 if __name__ == '__main__':
-    S,N = 4.5,4
+    S,N = 6,5
     hilbert = HilbertSpace(S,N)
     zerohilbert = ZeroHilbert(hilbert)
     zero_ang = ZeroAngularMomentum(zerohilbert)
     zero_ang.diagonalize()
     print zero_ang.nzero
-    print zero_ang.zero_eigvec
+    print zero_ang.eigenvalues
